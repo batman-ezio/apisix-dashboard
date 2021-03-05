@@ -29,6 +29,7 @@ export default {
   'component.global.save': 'Save',
   'component.global.edit': 'Edit',
   'component.global.view': 'View',
+  'component.global.duplicate': 'Duplicate',
   'component.global.manage': 'Manage',
   'component.global.update': 'Update',
   'component.global.get': 'Get',
