@@ -411,6 +411,12 @@ func (h *Handler) Update(c droplet.Context) (interface{}, error) {
 		input.Route.ID = input.ID
 	}
 
+	// check duplicate name
+	if err := h.checkDuplicateName(c, input.Name, input.ID); err != nil {
+		return &data.SpecCodeResponse{StatusCode: http.StatusBadRequest},
+			consts.InvalidParam(err.Error())
+	}
+
 	//check depend
 	if input.ServiceID != nil {
 		serviceID := utils.InterfaceToString(input.ServiceID)

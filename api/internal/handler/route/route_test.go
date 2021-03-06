@@ -706,8 +706,49 @@ func TestRoute_Create(t *testing.T) {
 
 	luaCode, err := generateLuaCode(scriptMap)
 	assert.Nil(t, err)
+	mockData := []*entity.Route{
+		{
+			BaseInfo: entity.BaseInfo{CreateTime: 1609742634},
+			Name:     "r1",
+			URI:      "/test_r1",
+			Labels: map[string]string{
+				"version": "v1",
+				"build":   "16",
+			},
+			Upstream: &entity.UpstreamDef{
+				Nodes: []interface{}{
+					map[string]interface{}{
+						"host":   "39.97.63.215",
+						"port":   float64(80),
+						"weight": float64(1),
+					},
+				},
+			},
+		},
+	}
 
 	tests := []testCase{
+		{
+			caseDesc: "create route failed, duplicate name",
+			giveInput: &entity.Route{
+				BaseInfo: entity.BaseInfo{
+					ID:         "s1",
+					CreateTime: 1609746531,
+				},
+				Name:       "r1",
+				Desc:       "test_route",
+				UpstreamID: "u1",
+				ServiceID:  "s1",
+				Script:     "",
+				Labels: map[string]string{
+					"version": "v1",
+				},
+			},
+			wantRet:    &data.SpecCodeResponse{StatusCode: http.StatusBadRequest},
+			wantErr:    consts.InvalidParam(fmt.Sprintf("Route name %s is reduplicate", "r1")),
+			serviceRet: nil,
+			serviceErr: data.ErrNotFound,
+		},
 		{
 			caseDesc: "create route success",
 			giveInput: &entity.Route{
@@ -785,7 +826,7 @@ func TestRoute_Create(t *testing.T) {
 					ID:         "s2",
 					CreateTime: 1609746531,
 				},
-				Name:       "s1",
+				Name:       "s2",
 				Desc:       "test_route",
 				UpstreamID: "u1",
 				ServiceID:  "not_found",
@@ -806,7 +847,7 @@ func TestRoute_Create(t *testing.T) {
 					ID:         "r1",
 					CreateTime: 1609746531,
 				},
-				Name:       "r1",
+				Name:       "s2",
 				Desc:       "test route",
 				UpstreamID: "r1",
 				// mock store will return err if service is s3
@@ -829,7 +870,7 @@ func TestRoute_Create(t *testing.T) {
 					ID:         "s2",
 					CreateTime: 1609746531,
 				},
-				Name:       "s1",
+				Name:       "s2",
 				Desc:       "test_route",
 				UpstreamID: "not_found",
 				ServiceID:  "s2",
@@ -850,7 +891,7 @@ func TestRoute_Create(t *testing.T) {
 					ID:         "s2",
 					CreateTime: 1609746531,
 				},
-				Name:       "s1",
+				Name:       "s2",
 				Desc:       "test_route",
 				UpstreamID: "error",
 				ServiceID:  "s2",
@@ -871,7 +912,7 @@ func TestRoute_Create(t *testing.T) {
 					ID:         "s2",
 					CreateTime: 1609746531,
 				},
-				Name:       "s1",
+				Name:       "s2",
 				Desc:       "test_route",
 				UpstreamID: "u1",
 				ServiceID:  "s2",
@@ -962,6 +1003,25 @@ func TestRoute_Create(t *testing.T) {
 			getCalled := false
 
 			mStore := &store.MockInterface{}
+			mStore.On("List", mock.Anything).Run(func(args mock.Arguments) {
+			}).Return(func(input store.ListInput) *store.ListOutput {
+				var returnData []interface{}
+				for _, c := range mockData {
+					if input.Predicate(c) {
+						if input.Format == nil {
+							returnData = append(returnData, c)
+							continue
+						}
+
+						returnData = append(returnData, input.Format(c))
+					}
+				}
+
+				return &store.ListOutput{
+					Rows:      returnData,
+					TotalSize: len(returnData),
+				}
+			}, tc.mockErr)
 			mStore.On("Create", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 				getCalled = true
 				route := args.Get(1).(*entity.Route)
@@ -994,6 +1054,26 @@ func TestRoute_Update(t *testing.T) {
 	scriptMap := make(map[string]interface{})
 	err := json.Unmarshal([]byte(DagScript), &scriptMap)
 	assert.Nil(t, err)
+	mockData := []*entity.Route{
+		{
+			BaseInfo: entity.BaseInfo{CreateTime: 1609742634},
+			Name:     "r0",
+			URI:      "/test_r1",
+			Labels: map[string]string{
+				"version": "v1",
+				"build":   "16",
+			},
+			Upstream: &entity.UpstreamDef{
+				Nodes: []interface{}{
+					map[string]interface{}{
+						"host":   "39.97.63.215",
+						"port":   float64(80),
+						"weight": float64(1),
+					},
+				},
+			},
+		},
+	}
 
 	luaCode, err := generateLuaCode(scriptMap)
 	assert.Nil(t, err)
@@ -1190,11 +1270,11 @@ func TestRoute_Update(t *testing.T) {
 			},
 			mockErr:      fmt.Errorf("route update error"),
 			wantErr:      fmt.Errorf("route update error"),
-			wantRet:      &data.SpecCodeResponse{StatusCode: http.StatusInternalServerError},
+			wantRet:      &data.SpecCodeResponse{StatusCode: http.StatusBadRequest},
 			serviceRet:   "service",
 			upstreamRet:  "upstream",
 			serviceInput: "s1",
-			called:       true,
+			called:       false,
 		},
 	}
 
@@ -1202,6 +1282,25 @@ func TestRoute_Update(t *testing.T) {
 		t.Run(tc.caseDesc, func(t *testing.T) {
 			getCalled := false
 			routeStore := &store.MockInterface{}
+			routeStore.On("List", mock.Anything).Run(func(args mock.Arguments) {
+			}).Return(func(input store.ListInput) *store.ListOutput {
+				var returnData []interface{}
+				for _, c := range mockData {
+					if input.Predicate(c) {
+						if input.Format == nil {
+							returnData = append(returnData, c)
+							continue
+						}
+
+						returnData = append(returnData, input.Format(c))
+					}
+				}
+
+				return &store.ListOutput{
+					Rows:      returnData,
+					TotalSize: len(returnData),
+				}
+			}, tc.mockErr)
 
 			routeStore.On("Update", mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 				getCalled = true
@@ -1597,7 +1696,7 @@ func TestRoute_Exist(t *testing.T) {
 				Exclude: "002",
 			},
 			wantRet: &data.SpecCodeResponse{StatusCode: http.StatusBadRequest},
-			wantErr: consts.InvalidParam("Route name is reduplicate"),
+			wantErr: consts.InvalidParam("Route name r1 is reduplicate"),
 			called:  true,
 		},
 		{

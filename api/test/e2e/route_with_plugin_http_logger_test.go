@@ -43,6 +43,7 @@ func TestRoute_With_Log_Plugin(t *testing.T) {
 			Method: http.MethodPut,
 			Path:   "/apisix/admin/routes/r1",
 			Body: `{
+				"name": "r1",
 				"uri": "/hello_",
 				"plugins": {
 					"http-logger": {
@@ -102,6 +103,7 @@ func TestRoute_With_Log_Plugin(t *testing.T) {
 			Method: http.MethodPut,
 			Path:   "/apisix/admin/routes/r2",
 			Body: `{
+				"name": "r2",
 				"uri": "/hello",
 				"plugins": {
 					"http-logger": {

@@ -29,6 +29,7 @@ func TestRoute_with_priority(t *testing.T) {
 			Method: http.MethodPut,
 			Path:   "/apisix/admin/routes/r1",
 			Body: `{
+					"name": "r1",
 					"uri": "/server_port",
 					"methods": ["GET"],
 					"upstream": {
@@ -58,6 +59,7 @@ func TestRoute_with_priority(t *testing.T) {
 			Method: http.MethodPut,
 			Path:   "/apisix/admin/routes/r2",
 			Body: `{
+					"name": "r2",
 					"uri": "/server_port",
 					"methods": ["GET"],
 					"priority": 1,

@@ -17,6 +17,7 @@
 package e2e
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -57,7 +58,7 @@ func TestRoute_with_name_desc(t *testing.T) {
 			Query:        "name=jack",
 			Headers:      map[string]string{"Authorization": token},
 			ExpectStatus: http.StatusBadRequest,
-			ExpectBody:   "Route name is reduplicate",
+			ExpectBody:   fmt.Sprintf("Route name %s is reduplicate", "jack"),
 			Sleep:        sleepTime,
 		},
 		{
