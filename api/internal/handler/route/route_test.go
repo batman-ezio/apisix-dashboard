@@ -1270,11 +1270,11 @@ func TestRoute_Update(t *testing.T) {
 			},
 			mockErr:      fmt.Errorf("route update error"),
 			wantErr:      fmt.Errorf("route update error"),
-			wantRet:      &data.SpecCodeResponse{StatusCode: http.StatusBadRequest},
+			wantRet:      &data.SpecCodeResponse{StatusCode: http.StatusInternalServerError},
 			serviceRet:   "service",
 			upstreamRet:  "upstream",
 			serviceInput: "s1",
-			called:       false,
+			called:       true,
 		},
 	}
 
@@ -1300,7 +1300,7 @@ func TestRoute_Update(t *testing.T) {
 					Rows:      returnData,
 					TotalSize: len(returnData),
 				}
-			}, tc.mockErr)
+			}, nil)
 
 			routeStore.On("Update", mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 				getCalled = true
